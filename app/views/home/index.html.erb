@@ -1,0 +1,76 @@
+<% content_for :title, "IA Lab | Algoritmos em Ruby" %>
+
+<main class="site-shell">
+  <%= render "shared/topbar" %>
+
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="hero-copy">
+      <p class="eyebrow">Laboratório de algoritmos <span>01</span></p>
+      <h1 id="hero-title">Aprender IA<br><em>fazendo.</em></h1>
+      <p class="hero-lede">Uma bancada de experimentos em Ruby para transformar conceitos de inteligência artificial em código que você pode executar, observar e modificar.</p>
+      <div class="hero-meta">
+        <span><strong><%= @experiments.count(&:available?) %></strong> aulas prontas</span>
+        <span class="meta-divider" aria-hidden="true"></span>
+        <span>Rumale + Torch.rb</span>
+      </div>
+    </div>
+
+    <div class="hero-board" aria-label="Mapa do laboratório">
+      <div class="board-label">RUBY / IA</div>
+      <div class="board-grid" aria-hidden="true">
+        <span class="board-point point-one"></span>
+        <span class="board-point point-two"></span>
+        <span class="board-point point-three"></span>
+        <span class="board-line line-one"></span>
+        <span class="board-line line-two"></span>
+      </div>
+      <div class="board-caption">
+        <span class="board-index">LAB_001</span>
+        <span>pronto para explorar</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="experiment-section" id="experimentos" aria-labelledby="experiments-title">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Roteiro da aula</p>
+        <h2 id="experiments-title">Escolha um experimento</h2>
+      </div>
+      <p class="section-count"><%= format("%02d", @experiments.length) %> módulos no mapa</p>
+    </div>
+
+    <div class="experiment-grid">
+      <% @experiments.each_with_index do |experiment, index| %>
+        <article class="experiment-card accent-<%= experiment.accent %> <%= "is-soon" unless experiment.available? %>">
+          <div class="card-topline">
+            <span class="card-index"><%= format("%02d", index + 1) %></span>
+            <span class="status status-<%= experiment.status %>">
+              <span class="status-dot" aria-hidden="true"></span>
+              <%= experiment.available? ? "Disponível" : "Em breve" %>
+            </span>
+          </div>
+
+          <div class="card-body">
+            <p class="card-library"><%= experiment.library %></p>
+            <h3><%= experiment.title %></h3>
+            <p><%= experiment.summary %></p>
+          </div>
+
+          <div class="card-footer">
+            <span class="card-steps"><%= experiment.steps.length %> etapas</span>
+            <%= link_to experiment_path(experiment.slug), class: "card-link" do %>
+              <span><%= experiment.available? ? "Abrir aula" : "Ver roteiro" %></span>
+              <span class="arrow" aria-hidden="true">↗</span>
+            <% end %>
+          </div>
+        </article>
+      <% end %>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <span>IA Lab</span>
+    <span>Um algoritmo por vez.</span>
+  </footer>
+</main>

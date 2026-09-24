@@ -1,0 +1,34 @@
+#!/usr/bin/env ruby
+require "fileutils"
+
+version = ENV.fetch("TORCH_LIBTORCH_VERSION", "2.13.0")
+custom_dir = ENV["TORCH_DIR"]
+
+if custom_dir && !custom_dir.empty?
+  torch_dir = File.expand_path(custom_dir)
+  unless File.file?(File.join(torch_dir, "include/torch/csrc/api/include/torch/torch.h")) && File.file?(File.join(torch_dir, "lib/libtorch.so"))
+    abort "TORCH_DIR não aponta para uma instalação LibTorch válida: #{torch_dir}"
+  end
+else
+  cache_dir = File.expand_path("~/.cache/torch-rb/#{version}")
+  torch_dir = File.join(cache_dir, "libtorch")
+  header = File.join(torch_dir, "include/torch/csrc/api/include/torch/torch.h")
+  library = File.join(torch_dir, "lib/libtorch.so")
+
+  unless File.file?(header) && File.file?(library)
+    archive = File.join(cache_dir, "libtorch-#{version}+cpu.zip")
+    url = "https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-#{version}%2Bcpu.zip"
+    FileUtils.mkdir_p(cache_dir)
+
+    abort "curl é necessário para baixar o LibTorch." unless system("command -v curl > /dev/null 2>&1")
+    abort "unzip é necessário para extrair o LibTorch." unless system("command -v unzip > /dev/null 2>&1")
+
+    puts "Baixando LibTorch #{version} para #{cache_dir}..."
+    system("curl", "-L", "--fail", "--retry", "3", url, "--output", archive, exception: true)
+    system("unzip", "-q", "-n", archive, "-d", cache_dir, exception: true)
+    FileUtils.rm_f(archive)
+  end
+end
+
+system("bundle", "config", "set", "--local", "build.torch-rb", "--with-torch-dir=#{torch_dir}", exception: true)
+puts "LibTorch configurado em #{torch_dir}."

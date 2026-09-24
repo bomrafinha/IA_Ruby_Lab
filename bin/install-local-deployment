@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+APP_ALIAS="/var/www/ia.rafinha.dev/current"
+NGINX_SSL_DIR="/etc/nginx/ssl"
+CERT_FILE="$NGINX_SSL_DIR/ia.rafinha.dev.crt"
+KEY_FILE="$NGINX_SSL_DIR/ia.rafinha.dev.key"
+CA_CERT_FILE="$NGINX_SSL_DIR/ia-lab-local-ca.crt"
+CA_KEY_FILE="$NGINX_SSL_DIR/ia-lab-local-ca.key"
+CA_SERIAL_FILE="$NGINX_SSL_DIR/ia-lab-local-ca.srl"
+CA_TRUST_FILE="/etc/pki/ca-trust/source/anchors/ia-lab-local-ca.crt"
+NSS_DB="/home/rafinha/.pki/nssdb"
+NSS_CA_NAME="IA Lab Local CA"
+configure_selinux_runtime() {
+  if ! command -v getenforce >/dev/null 2>&1 || [[ "$(getenforce)" != "Enforcing" ]]; then
+    return 0
+  fi
+
+  if command -v semanage >/dev/null 2>&1 && command -v restorecon >/dev/null 2>&1; then
+    local target pattern type
+
+    while IFS='|' read -r target pattern type; do
+      [[ -e "$target" ]] || continue
+      if ! sudo semanage fcontext -a -t "$type" "$pattern" >/dev/null 2>&1; then
+        sudo semanage fcontext -m -t "$type" "$pattern"
+      fi
+      sudo restorecon -RF "$target" >/dev/null
+    done <<EOF
+/home/rafinha/.rbenv|/home/rafinha/.rbenv(/.*)?|bin_t
+/home/rafinha/.cache/torch-rb/2.13.0/libtorch|/home/rafinha/.cache/torch-rb/2.13.0/libtorch(/.*)?|lib_t
+EOF
+  fi
+
+  if command -v getsebool >/dev/null 2>&1 && command -v setsebool >/dev/null 2>&1; then
+    sudo setsebool -P httpd_can_network_connect 1
+  fi
+}
+
+configure_local_certificate() {
+  local certificate_dir certificate_extensions needs_certificate
+
+  sudo install -d -m 755 "$NGINX_SSL_DIR"
+
+  if [[ ! -f "$CA_CERT_FILE" || ! -f "$CA_KEY_FILE" ]]; then
+    sudo openssl req -x509 -nodes -newkey rsa:4096 -sha256 -days 3650 \
+      -keyout "$CA_KEY_FILE" \
+      -out "$CA_CERT_FILE" \
+      -subj "/CN=IA Lab Local CA" \
+      -addext "basicConstraints=critical,CA:TRUE,pathlen:1" \
+      -addext "keyUsage=critical,keyCertSign,cRLSign" \
+      -addext "subjectKeyIdentifier=hash"
+    sudo chmod 600 "$CA_KEY_FILE"
+    sudo chmod 644 "$CA_CERT_FILE"
+  fi
+
+  sudo install -D -m 644 "$CA_CERT_FILE" "$CA_TRUST_FILE"
+  sudo update-ca-trust extract
+
+  needs_certificate=1
+  if [[ -f "$CERT_FILE" && -f "$KEY_FILE" ]] && \
+    sudo openssl verify -CAfile "$CA_CERT_FILE" "$CERT_FILE" >/dev/null 2>&1 && \
+    sudo openssl x509 -in "$CERT_FILE" -noout -ext subjectAltName 2>/dev/null | grep -q 'DNS:ia.rafinha.dev'; then
+    needs_certificate=0
+  fi
+
+  if [[ "$needs_certificate" -eq 1 ]]; then
+    certificate_dir="$(mktemp -d)"
+    certificate_extensions="$certificate_dir/server.ext"
+
+    cat > "$certificate_extensions" <<EOF
+basicConstraints=critical,CA:FALSE
+keyUsage=critical,digitalSignature,keyEncipherment
+extendedKeyUsage=serverAuth
+subjectAltName=DNS:ia.rafinha.dev
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid,issuer
+EOF
+
+    openssl req -new -nodes -newkey rsa:2048 \
+      -keyout "$certificate_dir/server.key" \
+      -out "$certificate_dir/server.csr" \
+      -subj "/CN=ia.rafinha.dev"
+    sudo openssl x509 -req -sha256 -days 825 \
+      -in "$certificate_dir/server.csr" \
+      -CA "$CA_CERT_FILE" \
+      -CAkey "$CA_KEY_FILE" \
+      -CAcreateserial \
+      -CAserial "$CA_SERIAL_FILE" \
+      -out "$certificate_dir/server.crt" \
+      -extfile "$certificate_extensions"
+    sudo install -m 600 "$certificate_dir/server.key" "$KEY_FILE"
+    sudo install -m 644 "$certificate_dir/server.crt" "$CERT_FILE"
+    rm -rf "$certificate_dir"
+  fi
+
+  if command -v certutil >/dev/null 2>&1 && [[ -d "$NSS_DB" ]]; then
+    if certutil -d "sql:$NSS_DB" -L -n "$NSS_CA_NAME" >/dev/null 2>&1; then
+      certutil -d "sql:$NSS_DB" -D -n "$NSS_CA_NAME" >/dev/null 2>&1 || true
+    fi
+    certutil -d "sql:$NSS_DB" -A -n "$NSS_CA_NAME" -t "C,," -i "$CA_CERT_FILE" >/dev/null 2>&1 || true
+  fi
+}
+
+if ! sudo -n true 2>/dev/null; then
+  sudo -v
+fi
+
+configure_selinux_runtime
+configure_local_certificate
+
+sudo install -d -m 755 /var/www/ia.rafinha.dev
+sudo ln -sfn "$APP_ROOT" "$APP_ALIAS"
+
+sudo install -d -m 755 /etc/nginx/snippets "$NGINX_SSL_DIR"
+sudo install -m 644 "$APP_ROOT/config/deploy/nginx/snippets/ia.rafinha.dev.proxy.conf" /etc/nginx/snippets/ia.rafinha.dev.proxy.conf
+sudo install -m 644 "$APP_ROOT/config/deploy/nginx/ia.rafinha.dev.conf" /etc/nginx/conf.d/ia.rafinha.dev.conf
+
+if ! grep -qE '(^|[[:space:]])ia\.rafinha\.dev([[:space:]]|$)' /etc/hosts; then
+  printf '127.0.0.1 ia.rafinha.dev\n' | sudo tee -a /etc/hosts >/dev/null
+fi
+
+sudo install -m 644 "$APP_ROOT/config/deploy/systemd/ia-lab.service" /etc/systemd/system/ia-lab.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now ia-lab.service
+sudo nginx -t
+sudo systemctl enable --now nginx
+sudo systemctl reload nginx
+
+printf 'IA Lab disponível em https://ia.rafinha.dev\n'

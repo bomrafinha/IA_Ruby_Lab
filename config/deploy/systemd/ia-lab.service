@@ -1,0 +1,25 @@
+[Unit]
+Description=IA Lab Rails application
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=rafinha
+Group=rafinha
+WorkingDirectory=/var/www/ia.rafinha.dev/current
+Environment=HOME=/home/rafinha
+Environment=PATH=/home/rafinha/.rbenv/versions/3.4.9/bin:/usr/local/bin:/usr/bin:/bin
+Environment=RAILS_ENV=development
+Environment=PORT=3120
+Environment=RAILS_LOG_TO_STDOUT=true
+Environment=TORCH_DIR=/home/rafinha/.cache/torch-rb/2.13.0/libtorch
+Environment=LD_LIBRARY_PATH=/home/rafinha/.cache/torch-rb/2.13.0/libtorch/lib
+ExecStartPre=/home/rafinha/.rbenv/versions/3.4.9/bin/ruby /home/rafinha/.rbenv/versions/3.4.9/bin/bundle exec rails tailwindcss:build
+ExecStart=/home/rafinha/.rbenv/versions/3.4.9/bin/ruby /home/rafinha/.rbenv/versions/3.4.9/bin/bundle exec puma -C config/puma.rb -b tcp://127.0.0.1:3120
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+
+[Install]
+WantedBy=multi-user.target

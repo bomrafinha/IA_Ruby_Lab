@@ -1,0 +1,113 @@
+<% content_for :title, "#{@experiment.title} | IA Lab" %>
+
+<main class="site-shell experiment-page">
+  <%= render "shared/topbar" %>
+
+  <section class="experiment-hero">
+    <div>
+      <%= link_to root_path, class: "back-link" do %>
+        <span aria-hidden="true">←</span> Voltar ao mapa
+      <% end %>
+      <p class="eyebrow"><%= @experiment.library %> <span>·</span> experimento <%= @experiment.slug %></p>
+      <h1><%= @experiment.title %></h1>
+      <p class="experiment-lede"><%= @experiment.description %></p>
+    </div>
+    <div class="experiment-number accent-text-<%= @experiment.accent %>">/ <%= format("%02d", (AiLab::ExperimentCatalog.all.index(@experiment) || 0) + 1) %></div>
+  </section>
+
+  <% if @experiment.available? %>
+    <section class="workbench" aria-labelledby="workbench-title">
+      <div class="workbench-main">
+        <div class="panel-heading">
+          <p class="eyebrow">Área de execução</p>
+          <h2 id="workbench-title">Rode o algoritmo</h2>
+        </div>
+
+        <% if @experiment.slug == "regressao-linear" %>
+          <%= form_with url: run_experiment_path(@experiment.slug), method: :post, local: true, class: "experiment-form" do %>
+            <div class="field-copy">
+              <%= label_tag :sample, "Novo valor de x" %>
+              <p>O modelo vai estimar o valor correspondente de y.</p>
+            </div>
+            <div class="field-row">
+              <%= number_field_tag :sample, params[:sample].presence || "6.0", step: 0.1, min: 0, class: "input" %>
+              <%= button_tag type: "submit", class: "primary-button" do %>
+                Executar <span aria-hidden="true">↗</span>
+              <% end %>
+            </div>
+          <% end %>
+        <% elsif @experiment.slug == "tensores" %>
+          <%= form_with url: run_experiment_path(@experiment.slug), method: :post, local: true, class: "experiment-form" do %>
+            <div class="field-copy">
+              <%= label_tag :values, "Valores do tensor" %>
+              <p>Separe os números por vírgula para montar uma nova entrada.</p>
+            </div>
+            <div class="field-row">
+              <%= text_field_tag :values, params[:values].presence || "2, 4, 6, 8, 10", class: "input" %>
+              <%= button_tag type: "submit", class: "primary-button" do %>
+                Executar <span aria-hidden="true">↗</span>
+              <% end %>
+            </div>
+          <% end %>
+        <% end %>
+
+        <% if @result[:kind] == :result %>
+          <div class="result-block">
+            <div class="result-title-row">
+              <div>
+                <p class="eyebrow">Saída do modelo</p>
+                <h3><%= @result[:title] %></h3>
+              </div>
+              <span class="result-mark" aria-hidden="true">✓</span>
+            </div>
+            <div class="equation"><%= @result[:equation] %></div>
+            <div class="stats-grid">
+              <% @result[:stats].each do |stat| %>
+                <div class="stat">
+                  <span><%= stat[:label] %></span>
+                  <strong><%= stat[:value] %></strong>
+                </div>
+              <% end %>
+            </div>
+            <p class="result-note"><%= @result[:note] %></p>
+          </div>
+        <% end %>
+      </div>
+
+      <aside class="workbench-aside">
+        <div class="aside-block">
+          <p class="eyebrow">Sequência</p>
+          <ol class="step-list">
+            <% @experiment.steps.each_with_index do |step, index| %>
+              <li>
+                <span><%= format("%02d", index + 1) %></span>
+                <%= step %>
+              </li>
+            <% end %>
+          </ol>
+        </div>
+        <% if @result[:source] %>
+          <div class="aside-block source-block">
+            <p class="eyebrow">Ruby em foco</p>
+            <pre><code><%= @result[:source] %></code></pre>
+          </div>
+        <% end %>
+      </aside>
+    </section>
+  <% else %>
+    <section class="coming-soon" aria-labelledby="coming-soon-title">
+      <div class="coming-soon-mark">/ / /</div>
+      <p class="eyebrow">Próxima aula</p>
+      <h2 id="coming-soon-title">Este experimento está sendo preparado.</h2>
+      <p><%= @result[:note] %></p>
+      <%= link_to root_path, class: "primary-button inline-button" do %>
+        Explorar aulas disponíveis <span aria-hidden="true">↗</span>
+      <% end %>
+    </section>
+  <% end %>
+
+  <footer class="site-footer">
+    <span>IA Lab</span>
+    <span><%= @experiment.library %> em Ruby</span>
+  </footer>
+</main>
