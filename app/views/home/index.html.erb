@@ -9,7 +9,7 @@
       <h1 id="hero-title">Aprender IA<br><em>fazendo.</em></h1>
       <p class="hero-lede">Uma bancada de experimentos em Ruby para transformar conceitos de inteligência artificial em código que você pode executar, observar e modificar.</p>
       <div class="hero-meta">
-        <span><strong><%= @experiments.count(&:available?) %></strong> aulas prontas</span>
+        <span><strong><%= @experiments.count(&:available?) %></strong> APIs catalogadas</span>
         <span class="meta-divider" aria-hidden="true"></span>
         <span>Rumale + Torch.rb</span>
       </div>
@@ -47,7 +47,7 @@
             <span class="card-index"><%= format("%02d", index + 1) %></span>
             <span class="status status-<%= experiment.status %>">
               <span class="status-dot" aria-hidden="true"></span>
-              <%= experiment.available? ? "Disponível" : "Em breve" %>
+              <%= experiment.available? ? "Disponível" : "Incompatível" %>
             </span>
           </div>
 
@@ -60,7 +60,7 @@
           <div class="card-footer">
             <span class="card-steps"><%= experiment.steps.length %> etapas</span>
             <%= link_to experiment_path(experiment.slug), class: "card-link" do %>
-              <span><%= experiment.available? ? "Abrir aula" : "Ver roteiro" %></span>
+              <span><%= experiment.available? ? "Abrir experimento" : "Ver compatibilidade" %></span>
               <span class="arrow" aria-hidden="true">↗</span>
             <% end %>
           </div>

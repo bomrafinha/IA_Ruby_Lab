@@ -41,10 +41,18 @@ TORCH_DIR=/caminho/para/libtorch bin/setup --skip-server
 bin/dev
 ```
 
-O padrão local é a porta `3120`; para sobrescrever, use `PORT=outra_porta bin/dev`. Abra `http://localhost:3120`. A home lista as aulas disponíveis e as próximas aulas reservadas. As aulas atuais são:
+O padrão local é a porta `3120`; para sobrescrever, use `PORT=outra_porta bin/dev`. Abra `http://localhost:3120`. A home lista 301 experimentos individuais do inventário. Na instalação atual, 236 executam chamadas reais e produzem gráficos, 36 são APIs indisponíveis por dependências/limitações do binding, 28 são namespaces ou classes-base e uma entrada é incompatível.
 
-- **Regressão linear**: treina uma reta com Rumale e prevê um novo valor.
-- **Operações com tensores**: cria um tensor com Torch.rb e calcula média e variância.
+As implementações funcionais ficam separadas por biblioteca em:
+
+- `app/services/ai_lab/experiments/base.rb`: resultado e utilitários compartilhados.
+- `app/services/ai_lab/experiments/rumale_adapter.rb`: fixtures e chamadas dos estimadores, transformadores, métricas e splitters Rumale.
+- `app/services/ai_lab/experiments/torch_adapter.rb`: tensores, módulos, perdas, otimizadores, distribuições e dados Torch.rb.
+- `app/services/ai_lab/experiment_executor.rb`: seleção do adapter e tratamento de incompatibilidades.
+
+Assim, uma aula pode ser estudada no arquivo funcional da biblioteca sem misturar a lógica com o catálogo ou a view.
+
+Os gráficos não são ilustrações fixas: o adapter devolve os valores calculados pela API em `result[:chart]`, e `app/assets/javascripts/experiment-charts.js` os desenha progressivamente em canvas. Resultados de inspeção, APIs indisponíveis e incompatibilidades não recebem gráfico fictício. Os fixtures são determinísticos e não precisam ser persistidos no SQLite.
 
 ## Tailwind local
 
@@ -90,9 +98,10 @@ bin/rails test
 
 ## Criar uma nova aula
 
-1. Adicione a definição do experimento em `app/services/ai_lab/experiment_catalog.rb`.
-2. Implemente a execução correspondente em `app/services/ai_lab/experiment_runner.rb` ou extraia um serviço próprio quando o algoritmo crescer.
-3. Inclua o formulário específico em `app/views/experiments/show.html.erb`.
-4. Cubra a página e a execução com um teste em `test/controllers/experiments_controller_test.rb`.
+1. Adicione a API ao inventário em `ALGORITMOS.md`.
+2. Ajuste o parser/metadados em `app/services/ai_lab/experiment_catalog.rb` se a entrada não seguir o formato atual.
+3. Implemente a chamada funcional no adapter da biblioteca em `app/services/ai_lab/experiments/`.
+4. Inclua o formulário específico em `app/views/experiments/show.html.erb`.
+5. Cubra a página e a execução com um teste em `test/controllers/experiments_controller_test.rb` ou nos testes de serviço.
 
 A rota dinâmica `experimentos/:slug` e o link da home já são compartilhados por todos os experimentos.

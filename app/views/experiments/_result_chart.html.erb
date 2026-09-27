@@ -1,0 +1,12 @@
+<% chart = @result[:chart] %>
+<div class="result-chart" data-experiment-chart="<%= json_escape(chart.to_json) %>">
+  <div class="chart-heading">
+    <div>
+      <p class="eyebrow">Traçado da execução</p>
+      <h3>O resultado toma forma</h3>
+    </div>
+    <span class="chart-type"><%= chart[:type] %></span>
+  </div>
+  <canvas class="experiment-chart-canvas" role="img" aria-label="Gráfico animado com o resultado de <%= @experiment.title %>"></canvas>
+  <p class="chart-fallback">Os dados do gráfico vêm diretamente da saída calculada por <%= @experiment.api_name || @experiment.title %>.</p>
+</div>

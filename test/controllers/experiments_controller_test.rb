@@ -17,8 +17,8 @@ class ExperimentsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "3.00"
   end
 
-  test "future experiment has a reserved page" do
-    get experiment_path("rede-neural")
+  test "incompatible experiment has a compatibility page" do
+    get experiment_path("rumale-nearest-neighbors-nearest-neighbors")
 
     assert_response :success
     assert_select ".coming-soon"

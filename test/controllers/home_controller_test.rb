@@ -6,7 +6,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", /Aprender IA/
-    assert_select ".experiment-card", count: 4
+    assert_select ".experiment-card", count: AiLab::ExperimentCatalog.all.length
     assert_select "a[href=?]", experiment_path("regressao-linear")
     assert_select "a[href=?]", experiment_path("tensores")
   end

@@ -414,6 +414,10 @@ input {
 	background: var(--line-strong);
 }
 
+.status-incompatible .status-dot {
+	background: var(--coral);
+}
+
 .card-body {
 	margin: 34px 0 30px;
 }
@@ -484,6 +488,18 @@ input {
 
 .experiment-page .topbar {
 	margin-bottom: 0;
+}
+
+.experiment-api {
+	margin: 14px 0 0;
+	color: var(--ink-soft);
+	font-family: "SFMono-Regular", Consolas, monospace;
+	font-size: 12px;
+}
+
+.experiment-api span {
+	margin: 0 6px;
+	color: var(--coral);
 }
 
 .experiment-hero {
@@ -655,6 +671,19 @@ input {
 	font-weight: 800;
 }
 
+.result-mode-label {
+	color: var(--lime);
+	font-size: 10px;
+	font-weight: 800;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.result-mode-needs_parameters .result-mode-label,
+.result-mode-inspection .result-mode-label {
+	color: var(--ink-soft);
+}
+
 .equation {
 	margin: 25px 0;
 	padding: 19px;
@@ -697,6 +726,52 @@ input {
 	margin: 18px 0 0;
 	color: var(--ink-soft);
 	font-size: 14px;
+}
+
+.result-chart {
+	margin-top: 32px;
+	padding-top: 24px;
+	border-top: 1px solid var(--line);
+}
+
+.chart-heading {
+	display: flex;
+	align-items: start;
+	justify-content: space-between;
+	gap: 18px;
+	margin-bottom: 12px;
+}
+
+.chart-heading h3 {
+	margin: 0;
+	font-family: Georgia, "Times New Roman", serif;
+	font-size: 25px;
+	font-weight: 400;
+}
+
+.chart-heading .eyebrow {
+	margin-bottom: 7px;
+}
+
+.chart-type {
+	color: var(--coral);
+	font-family: "SFMono-Regular", Consolas, monospace;
+	font-size: 11px;
+	text-transform: uppercase;
+}
+
+.experiment-chart-canvas {
+	display: block;
+	width: 100%;
+	height: 260px;
+	border: 1px solid var(--line);
+	background: var(--paper-strong);
+}
+
+.chart-fallback {
+	margin: 9px 0 0;
+	color: var(--ink-soft);
+	font-size: 12px;
 }
 
 .aside-block + .aside-block {

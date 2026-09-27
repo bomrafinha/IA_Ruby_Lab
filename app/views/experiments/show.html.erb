@@ -11,11 +11,23 @@
       <p class="eyebrow"><%= @experiment.library %> <span>·</span> experimento <%= @experiment.slug %></p>
       <h1><%= @experiment.title %></h1>
       <p class="experiment-lede"><%= @experiment.description %></p>
+      <p class="experiment-api"><%= @experiment.api_name || "Operações fundamentais" %> <span>·</span> <%= @experiment.category %></p>
     </div>
     <div class="experiment-number accent-text-<%= @experiment.accent %>">/ <%= format("%02d", (AiLab::ExperimentCatalog.all.index(@experiment) || 0) + 1) %></div>
   </section>
 
-  <% if @experiment.available? %>
+  <% if @experiment.incompatible? || @result[:kind] == :unavailable %>
+    <section class="coming-soon" aria-labelledby="incompatible-title">
+      <div class="coming-soon-mark">/ ! /</div>
+      <p class="eyebrow"><%= @result[:kind] == :unavailable ? "Disponibilidade" : "Compatibilidade" %></p>
+      <h2 id="incompatible-title"><%= @result[:title] %></h2>
+      <p><%= @result[:note] %></p>
+      <div class="equation"><%= @result[:source] %></div>
+      <%= link_to root_path, class: "primary-button inline-button" do %>
+        Voltar ao mapa <span aria-hidden="true">↗</span>
+      <% end %>
+    </section>
+  <% else %>
     <section class="workbench" aria-labelledby="workbench-title">
       <div class="workbench-main">
         <div class="panel-heading">
@@ -52,13 +64,15 @@
         <% end %>
 
         <% if @result[:kind] == :result %>
-          <div class="result-block">
+          <div class="result-block result-mode-<%= @result[:mode] || :executed %>">
             <div class="result-title-row">
               <div>
                 <p class="eyebrow">Saída do modelo</p>
                 <h3><%= @result[:title] %></h3>
               </div>
-              <span class="result-mark" aria-hidden="true">✓</span>
+              <span class="result-mode-label">
+                <%= @result[:mode] == :executed ? "API executada" : (@result[:mode] == :needs_parameters ? "Parâmetros necessários" : "API consultada") %>
+              </span>
             </div>
             <div class="equation"><%= @result[:equation] %></div>
             <div class="stats-grid">
@@ -70,6 +84,7 @@
               <% end %>
             </div>
             <p class="result-note"><%= @result[:note] %></p>
+            <%= render "result_chart" if @result[:chart] %>
           </div>
         <% end %>
       </div>
@@ -93,16 +108,6 @@
           </div>
         <% end %>
       </aside>
-    </section>
-  <% else %>
-    <section class="coming-soon" aria-labelledby="coming-soon-title">
-      <div class="coming-soon-mark">/ / /</div>
-      <p class="eyebrow">Próxima aula</p>
-      <h2 id="coming-soon-title">Este experimento está sendo preparado.</h2>
-      <p><%= @result[:note] %></p>
-      <%= link_to root_path, class: "primary-button inline-button" do %>
-        Explorar aulas disponíveis <span aria-hidden="true">↗</span>
-      <% end %>
     </section>
   <% end %>
 
