@@ -448,7 +448,7 @@ GEM
     thruster (0.1.26-aarch64-linux)
     thruster (0.1.26-x86_64-linux)
     timeout (0.6.1)
-    torch-rb (0.25.0)
+    torch-rb (0.26.0)
       rice (>= 4.8)
     tsort (0.2.0)
     turbo-rails (2.0.23)
@@ -506,7 +506,7 @@ DEPENDENCIES
   stimulus-rails
   tailwindcss-rails (~> 4.6)
   thruster
-  torch-rb (~> 0.25)
+  torch-rb (~> 0.26)
   turbo-rails
   tzinfo-data
   web-console
@@ -670,7 +670,7 @@ CHECKSUMS
   thruster (0.1.26-aarch64-linux) sha256=2171cb34928c0250830008f535c4ab2ee57846cc3f5d3e96c3475f7b3de7a541
   thruster (0.1.26-x86_64-linux) sha256=3117a6ee430663f845a0457699fe9a05232dcc6c396e2cc83504de5a223c60e8
   timeout (0.6.1) sha256=78f57368a7e7bbadec56971f78a3f5ecbcfb59b7fcbb0a3ed6ddc08a5094accb
-  torch-rb (0.25.0) sha256=85aae7eac61965f599740b26930e37eec66027d072e7919ba231cfc704863e0b
+  torch-rb (0.26.0) sha256=c85f447c2cc07dbd34be7db4df125a99a611781ad94e70aadfad9bde9cfc016f
   tsort (0.2.0) sha256=9650a793f6859a43b6641671278f79cfead60ac714148aabe4e3f0060480089f
   turbo-rails (2.0.23) sha256=ee0d90733aafff056cf51ff11e803d65e43cae258cc55f6492020ec1f9f9315f
   tzinfo (2.0.6) sha256=8daf828cc77bcf7d63b0e3bdb6caa47e2272dcfaf4fbfe46f8c3a9df087a829b
